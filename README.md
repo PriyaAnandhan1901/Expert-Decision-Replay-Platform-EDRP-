@@ -1,70 +1,197 @@
-# Getting Started with Create React App
+# Expert Decision Replay Platform (EDRP)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack web application for capturing, comparing, and reviewing organizational decisions — built as part of an Infosys internship project.
 
-## Available Scripts
+EDRP lets teams log a decision, weigh alternatives against cost/feasibility/risk, discuss them collaboratively, route them through an approval workflow, and (in progress) track document attachments and version history over time.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI (Python) |
+| Frontend | React |
+| Database | SQLite (`edrp.db`) |
+| Auth | JWT (OAuth2 password flow) |
+| ORM | SQLAlchemy |
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+> **Note:** The database is SQLite, hardcoded in `backend/app/database/database.py` as `sqlite:///./edrp.db`. Any `DATABASE_URL` environment variable is currently ignored.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Project Structure
 
-### `npm run build`
+```
+Expert Decision Replay Platform/
+├── backend/
+│   ├── app/
+│   │   ├── models/         # SQLAlchemy models
+│   │   │   ├── decision.py
+│   │   │   ├── alternative.py
+│   │   │   ├── user.py
+│   │   │   ├── role.py
+│   │   │   ├── team.py
+│   │   │   ├── discussion.py
+│   │   │   ├── approval.py
+│   │   │   ├── decision_category.py
+│   │   │   └── notification_document_audit.py
+│   │   ├── schemas/        # Pydantic schemas
+│   │   │   ├── decision.py
+│   │   │   └── discussion.py
+│   │   ├── routers/        # API route handlers
+│   │   │   ├── auth.py
+│   │   │   ├── users.py
+│   │   │   ├── decisions.py
+│   │   │   ├── alternatives.py
+│   │   │   └── comments.py
+│   │   ├── utils/
+│   │   ├── database/
+│   │   │   └── database.py
+│   │   └── main.py         # FastAPI app entrypoint
+│   ├── venv/
+│   ├── edrp.db              # SQLite database file
+│   └── fix_db.py            # One-off schema/data patch script
+└── frontend/
+    └── src/
+        ├── api/
+        ├── context/
+        ├── pages/
+        └── components/
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Features
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### ✅ Completed
 
-### `npm run eject`
+- **Authentication & RBAC** — JWT-based login, role-based access control
+- **Decision Management** — create, view, and track decisions through a status workflow (draft → under review → approved/rejected)
+- **Alternative Comparison** — add alternatives to a decision with pros/cons, estimated cost, feasibility (Low/Medium/High), and risk level
+- **Approvals** — request and record approval decisions on a decision
+- **Discussion (backend)** — comment CRUD API tied to a decision, with owner-only edit/delete
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 🚧 In Progress
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Discussion module — frontend (comment list + add-comment UI)
+- Document management (upload / view / delete)
+- Version tracking (change history, modified by/date)
+- Alternative comparison view (side-by-side)
+- Dedicated Decision List / Create / Edit pages
+- Dedicated Alternative Add / View / Edit pages
+- Backend validation (enum constraints, positive-cost checks)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 📋 Planned
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Notifications
+- Audit log viewer
+- Reports / analytics export
+- Role-specific dashboards
+- Docker deployment
+- Automated tests
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Getting Started
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Prerequisites
 
-### Code Splitting
+- Python 3.9+
+- Node.js and npm
+- Windows/macOS/Linux with a terminal
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Backend Setup
 
-### Analyzing the Bundle Size
+```powershell
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1      # Windows
+# source venv/bin/activate       # macOS/Linux
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+pip install -r requirements.txt
 
-### Making a Progressive Web App
+# Check nothing else is already using port 8000 first:
+netstat -ano | findstr :8000
+# If a process is listed, free the port before starting:
+# taskkill /PID <pid> /F
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+uvicorn app.main:app --reload
+```
 
-### Advanced Configuration
+The API will be available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Frontend Setup
 
-### Deployment
+```powershell
+cd frontend
+npm install
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+The app will be available at `http://localhost:3000`.
 
-### `npm run build` fails to minify
+### Test Account
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```
+Email:    admin@test.com
+Password: secret123
+```
+
+---
+
+## API Overview
+
+| Resource | Base Path |
+|---|---|
+| Auth | `/api/auth` |
+| Users | `/api/users` |
+| Decisions | `/api/decisions` |
+| Alternatives | `/api/alternatives` |
+| Comments | `/api/comments` |
+
+Full interactive documentation is auto-generated by FastAPI at `/docs` while the backend is running.
+
+---
+
+## Troubleshooting
+
+**"Failed to load" errors or CORS-looking messages in the browser console**
+These are almost always caused by the backend not actually running, rather than a real CORS misconfiguration. Check:
+1. Is `uvicorn` still running in its terminal, or did it crash/exit?
+2. Is port 8000 already occupied by a leftover process?
+   ```powershell
+   netstat -ano | findstr :8000
+   taskkill /PID <pid> /F
+   ```
+3. Restart uvicorn and retry.
+
+**Backend keeps restarting or crashing unexpectedly**
+Double-check no stray shell commands were accidentally pasted into a `.py` file instead of a terminal — this has happened before and produces confusing `SyntaxError`/`NameError` tracebacks on startup.
+
+**500 error / `ResponseValidationError` on an endpoint**
+Usually means existing rows in `edrp.db` don't match a recently changed schema (e.g., a renamed or newly-added column with old data still in the old shape). Inspect the table directly:
+```python
+import sqlite3
+conn = sqlite3.connect("edrp.db")
+cur = conn.cursor()
+cur.execute("SELECT * FROM <table_name>")
+print(cur.fetchall())
+```
+Patch stale rows with an `UPDATE` statement and `conn.commit()`.
+
+---
+
+## Roadmap
+
+| Milestone | Scope | Status |
+|---|---|---|
+| Milestone 1 | Auth, RBAC, decision workflow, comments/discussion (backend), risk assessments | ✅ Complete |
+| Milestone 2 | Decision management, alternative comparison, file uploads, discussion module, version tracking | 🚧 In progress |
+| Milestone 3+ | Notifications, audit log, reports, dashboards, Docker, tests | 📋 Planned |
+
+---
+
+## License
+
+Internal project — Infosys internship coursework.
